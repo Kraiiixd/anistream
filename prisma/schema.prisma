@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  MEMBER
+  BETA_TESTER
+  MODERATOR
+  ADMIN
+  DEVELOPER
+}
+
+enum Badge {
+  MEMBER
+  BETA_TESTER
+  MODERATOR
+  ADMIN
+  DEVELOPER
+}
+
+enum AnimeStatus {
+  ONGOING
+  COMPLETED
+  UPCOMING
+  HIATUS
+}
+
+enum AnimeType {
+  TV
+  OVA
+  MOVIE
+  SPECIAL
+ ONA
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  accountId     String         @unique @default(uuid())
+  username      String         @unique
+  email         String         @unique
+  avatar        String?
+  role          Role           @default(MEMBER)
+  badge         Badge          @default(MEMBER)
+  exp           Int            @default(0)
+  level        Int            @default(1)
+  isVerified    Boolean        @default(false)
+  lastWatchedAt DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  favorites     Favorite[]
+  watchHistory  WatchHistory[]
+  comments      Comment[]
+  notifications Notification[]
+}
+
+model Anime {
+  id            Int           @id @default(autoincrement())
+  slug          String        @unique
+  title         String
+  japaneseTitle String?
+  synopsis      String?
+  genres        String[]
+  releaseDate   DateTime?
+  status        AnimeStatus   @default(ONGOING)
+  type          AnimeType     @default(TV)
+  episodes      Int           @default(0)
+  score         Float         @default(0)
+  coverImage    String
+  trailerUrl    String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  favorites    Favorite[]
+  watchHistory WatchHistory[]
+  comments     Comment[]
+}
+
+model Favorite {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  anime     Anime    @relation(fields: [animeId], references: [id])
+  animeId   Int
+  createdAt DateTime @default(now())
+
+  @@unique([userId, animeId])
+}
+
+model WatchHistory {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  anime     Anime    @relation(fields: [animeId], references: [id])
+  animeId   Int
+  progress  Int      @default(0)
+  completed Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, animeId])
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  anime     Anime    @relation(fields: [animeId], references: [id])
+  animeId   Int
+  content   String
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
